@@ -1,20 +1,24 @@
 # Reproducible Research: Peer Assessment 1
 
 ## some changes to set the correct locale
-```{r, results='hide'}
+
+```r
 old_locale <- Sys.getlocale("LC_TIME")
-Sys.setlocale("LC_TIME", "English") 
+Sys.setlocale("LC_TIME", "English")
 ```
+
 
 ## Loading and preprocessing the data
 
 Load the data with read.csv and colClasses-Parameter for correct column-class.
 
-```{r echo = TRUE}
+
+```r
 library(data.table)
-unzip("./activity.zip")
-data <- data.table(read.csv("activity.csv", colClasses=c("integer", "Date", "integer"), header=T))
+data <- data.table(read.csv("activity.csv", colClasses = c("integer", "Date", 
+    "integer"), header = T))
 ```
+
 
 
 ## What is mean total number of steps taken per day?
@@ -24,27 +28,45 @@ data <- data.table(read.csv("activity.csv", colClasses=c("integer", "Date", "int
 
 First the calculation of the total number of steps by day.
 
-```{r, echo = TRUE}
-q1 <- data[ complete.cases(data), list(sum=sum(steps)), by=date ]
+
+```r
+q1 <- data[complete.cases(data), list(sum = sum(steps)), by = date]
 ```
+
 
 Answer to part 1), the Histogram.
 
-```{r, q1_histogram, echo = TRUE}
-hist(q1$sum, main="Total number of steps per day", xlab = "number of steps")
+
+```r
+hist(q1$sum, main = "Total number of steps per day", xlab = "number of steps")
 ```
+
+![plot of chunk q1_histogram](figure/q1_histogram.png) 
+
 
 and part 2)
 
 The mean of total number of steps:
-```{r, echo = TRUE}
+
+```r
 mean(q1$sum)
 ```
 
+```
+## [1] 10766
+```
+
+
 The median of total number of steps:
-```{r echo = TRUE}
+
+```r
 median(q1$sum)
 ```
+
+```
+## [1] 10765
+```
+
 
 ## What is the average daily activity pattern?
 
@@ -52,19 +74,31 @@ median(q1$sum)
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 First group the data by inteval and calculate the mean number of steps, then plot the time series
-```{r, echo = TRUE}
-q2 <- data[ complete.cases(data), list(mean=mean(steps)), by=interval ]
+
+```r
+q2 <- data[complete.cases(data), list(mean = mean(steps)), by = interval]
 ```
+
 
 To answer the 1. question, plot the data
-```{r, q2_plot, echo = TRUE}
-plot(q2$interval, q2$mean , type = "l", xlab="interval", ylab="mean", main="5-min interval time series")
+
+```r
+plot(q2$interval, q2$mean, type = "l", xlab = "interval", ylab = "mean", main = "5-min interval time series")
 ```
 
+![plot of chunk q2_plot](figure/q2_plot.png) 
+
+
 To answer the 2. question, get the interval of the dataset which mean value equals the maximum mean value
-```{r, echo = TRUE}
+
+```r
 q2[q2$mean == max(q2$mean), ]$interval
 ```
+
+```
+## [1] 835
+```
+
 
 ## Imputing missing values
 
@@ -74,44 +108,96 @@ q2[q2$mean == max(q2$mean), ]$interval
 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 To answer the 1. question, summarize the true/false values for complete cases on the data
-```{r, echo = TRUE}
+
+```r
 sum(!complete.cases(data))
 ```
+
+```
+## [1] 2304
+```
+
 
 To answer the 2. question some checks have to be done.
 First evaluate wich column has NA values:
 
-```{r, echo = TRUE}
+
+```r
 sum(is.na(data$date))
+```
+
+```
+## [1] 0
+```
+
+```r
 sum(is.na(data$interval))
+```
+
+```
+## [1] 0
+```
+
+```r
 sum(is.na(data$steps))
 ```
+
+```
+## [1] 2304
+```
+
 
 Only column "steps" has NA values.
 For part 3. a new dataset with the imputed values has to be created.
 Therefore we distribute the mean value of the same 5-minute interval of all other days to the NA values of the steps column.
 
-```{r, echo = TRUE}
+
+```r
 require(plyr)
-impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
-q3 <- data.table(ddply(data, ~ interval, transform, steps = impute.mean(steps)))
 ```
+
+```
+## Loading required package: plyr
+```
+
+```r
+impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+q3 <- data.table(ddply(data, ~interval, transform, steps = impute.mean(steps)))
+```
+
 
 In part 4. a new histogram and die mean and median values (previous steps) have to be calculated with the new dataset.
 
 The histogram slightly differs from the histogram of part 1:
-```{r, q3_histogram, echo = TRUE}
-hist(q3[ , list(sum=sum(steps)), by=date ]$sum, main="Total number of steps per day", xlab = "number of steps")
-```
-The mean of total number of steps:
-```{r, echo = TRUE}
-mean(q3[ , list(sum=sum(steps)), by=date ]$sum)
+
+```r
+hist(q3[, list(sum = sum(steps)), by = date]$sum, main = "Total number of steps per day", 
+    xlab = "number of steps")
 ```
 
-The median of total number of steps differ from part 1 of the assignment and is now equal to the mean:
-```{r echo = TRUE}
-median(q3[ , list(sum=sum(steps)), by=date ]$sum)
+![plot of chunk q3_histogram](figure/q3_histogram.png) 
+
+The mean of total number of steps:
+
+```r
+mean(q3[, list(sum = sum(steps)), by = date]$sum)
 ```
+
+```
+## [1] 10766
+```
+
+
+The median of total number of steps differ from part 1 of the assignment and is now equal to the mean:
+
+```r
+median(q3[, list(sum = sum(steps)), by = date]$sum)
+```
+
+```
+## [1] 10766
+```
+
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -123,20 +209,30 @@ median(q3[ , list(sum=sum(steps)), by=date ]$sum)
 
 Creating a factor variable with ifelse-statement using the weekdays function:
 
-```{r echo = TRUE}
-q3$week_ind <- as.factor(ifelse(weekdays(q3$date) %in% c("Saturday", "Sunday"), "weekend", "weekday"))
+
+```r
+q3$week_ind <- as.factor(ifelse(weekdays(q3$date) %in% c("Saturday", "Sunday"), 
+    "weekend", "weekday"))
 ```
+
 
 Now the plotting in lattice.
 
-```{r, q4_lattice, echo = TRUE}
+
+```r
 library(lattice)
-q4 <- q3[ , list(mean=mean(steps)), by=list(interval, week_ind) ]
-xyplot( mean ~ interval | week_ind , data=q4, type="l", layout = c(1,2), xlab = "Interval", ylab="Number of Steps")
+q4 <- q3[, list(mean = mean(steps)), by = list(interval, week_ind)]
+xyplot(mean ~ interval | week_ind, data = q4, type = "l", layout = c(1, 2), 
+    xlab = "Interval", ylab = "Number of Steps")
 ```
 
+![plot of chunk q4_lattice](figure/q4_lattice.png) 
+
+
 ## set locale back to default
-```{r, results='hide'}
-Sys.setlocale("LC_TIME", old_locale) 
+
+```r
+Sys.setlocale("LC_TIME", old_locale)
 ```
+
 
